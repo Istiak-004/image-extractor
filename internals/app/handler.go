@@ -1,24 +1,68 @@
 package app
 
 import (
+	"encoding/base64"
 	"encoding/json"
+	"fmt"
+	"log"
 	"net/http"
+	"os"
 
+	"github.com/istiak-004/image-extractor/internals/domain"
 	"github.com/istiak-004/image-extractor/internals/service"
 )
 
 type Handler struct {
-	extractorService service.ExtractorService
+	extractorService  service.ExtractorService
+	pngCreatorService service.PNGCreatorService
 }
 
-func NewHandler(es service.ExtractorService) *Handler {
+func NewHandler(es service.ExtractorService, cs service.PNGCreatorService) *Handler {
 	return &Handler{
-		extractorService: es,
+		extractorService:  es,
+		pngCreatorService: cs,
 	}
 }
 
 var request struct {
 	ImageBase64 string `json:"imageBase64"`
+}
+
+func (h *Handler) PNGCreatorHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("inside handler------------------")
+	w.Header().Set("Content-Type", "application/json")
+
+	var requestedData domain.ExtractedData
+	jsonMapData := make(map[string]string)
+
+	if err := json.NewDecoder(r.Body).Decode(&requestedData); err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+
+	jsonMapData["name"] = requestedData.Name
+	jsonMapData["organization"] = requestedData.Organization
+	jsonMapData["address"] = requestedData.Address
+	jsonMapData["mobile"] = requestedData.Mobile
+
+	pngData, err := h.pngCreatorService.CreatePNGFromJson(jsonMapData)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Error creating png from json %s", err))
+		return
+	}
+
+	err = os.WriteFile("with_json.png", pngData, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Convert to base64 image
+	base64Str := base64.StdEncoding.EncodeToString(pngData)
+
+	respondWithJSON(w, http.StatusOK, map[string]interface{}{
+		"data": base64Str,
+	})
+
 }
 
 func (h *Handler) ExtractDataFromImage(w http.ResponseWriter, r *http.Request) {

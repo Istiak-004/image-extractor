@@ -16,7 +16,9 @@ func NewServer() *Server {
 		router: mux.NewRouter(),
 	}
 	extractorService := service.NewExtractorService()
-	h := NewHandler(extractorService)
+	creatorService := service.NewPNGCreatorService()
+
+	h := NewHandler(extractorService, creatorService)
 	s.registerRoutes(h)
 
 	return s
@@ -30,4 +32,5 @@ func (s *Server) Start(addr string) error {
 func (s *Server) registerRoutes(h *Handler) {
 	api := s.router.PathPrefix("/api/v1").Subrouter()
 	api.HandleFunc("/extract", h.ExtractDataFromImage).Methods("POST")
+	api.HandleFunc("/create", h.PNGCreatorHandler).Methods("POST")
 }
