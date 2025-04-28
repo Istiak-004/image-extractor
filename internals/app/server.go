@@ -5,6 +5,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/istiak-004/image-extractor/internals/service"
+	"github.com/rs/cors"
 )
 
 type Server struct {
@@ -26,7 +27,15 @@ func NewServer() *Server {
 }
 
 func (s *Server) Start(addr string) error {
-	return http.ListenAndServe(addr, s.router)
+	corsMiddleware := cors.New(cors.Options{
+		AllowedOrigins:   []string{"https://json-extraction-challenge.intellixio.com"},
+		AllowedMethods:   []string{"GET", "POST", "OPTIONS"},
+		AllowedHeaders:   []string{"Content-Type"},
+		AllowCredentials: true,
+	})
+
+	handler := corsMiddleware.Handler(s.router)
+	return http.ListenAndServe(addr, handler)
 }
 
 func (s *Server) registerRoutes(h *Handler) {
