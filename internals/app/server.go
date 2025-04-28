@@ -27,6 +27,7 @@ func NewServer() *Server {
 }
 
 func (s *Server) Start(addr string) error {
+	// add headers
 	corsMiddleware := cors.New(cors.Options{
 		AllowedOrigins:   []string{"https://json-extraction-challenge.intellixio.com"},
 		AllowedMethods:   []string{"GET", "POST", "OPTIONS"},
