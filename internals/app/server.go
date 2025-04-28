@@ -36,11 +36,17 @@ func (s *Server) Start(addr string) error {
 	})
 
 	handler := corsMiddleware.Handler(s.router)
+
+	s.router.Methods("OPTIONS").PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	})
+
 	return http.ListenAndServe(addr, handler)
 }
 
 func (s *Server) registerRoutes(h *Handler) {
 	api := s.router.PathPrefix("/api/v1").Subrouter()
-	api.HandleFunc("/extract", h.ExtractDataFromImage).Methods("POST")
-	api.HandleFunc("/create", h.PNGCreatorHandler).Methods("POST")
+
+	api.HandleFunc("/extract", h.ExtractDataFromImage).Methods("POST", "OPTIONS")
+	api.HandleFunc("/create", h.PNGCreatorHandler).Methods("POST", "OPTIONS")
 }

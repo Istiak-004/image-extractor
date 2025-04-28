@@ -67,6 +67,11 @@ func (h *Handler) PNGCreatorHandler(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) ExtractDataFromImage(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
