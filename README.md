@@ -5,3 +5,9 @@
 
 ### using docker 
     docker compose up
+
+# APIS
+
+## endpoints
+    /api/v1/extract
+    /api/v1/create
